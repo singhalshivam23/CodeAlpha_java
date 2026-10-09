@@ -1,163 +1,188 @@
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 public class Main {
-    static class Student {
-        private final String name;
-        private final String rollNumber;
-        private final ArrayList<Double> marks;
+    static class Stock {
+        private final String symbol;
+        private final String company;
+        private double price;
 
-        Student(String name, String rollNumber, ArrayList<Double> marks) {
-            this.name = name;
-            this.rollNumber = rollNumber;
-            this.marks = marks;
+        Stock(String symbol, String company, double price) {
+            this.symbol = symbol;
+            this.company = company;
+            this.price = price;
         }
+        String getSymbol() { return symbol; }
+        String getCompany() { return company; }
+        double getPrice() { return price; }
+        void setPrice(double price) { this.price = price; }
+    }
 
-        String getName() { return name; }
-        String getRollNumber() { return rollNumber; }
-        ArrayList<Double> getMarks() { return marks; }
+    static class Transaction {
+        final String action;
+        final String symbol;
+        final int quantity;
+        final double price;
 
-        double average() {
-            if (marks.isEmpty()) return 0;
-            double total = 0;
-            for (double mark : marks) total += mark;
-            return total / marks.size();
+        Transaction(String action, String symbol, int quantity, double price) {
+            this.action = action;
+            this.symbol = symbol;
+            this.quantity = quantity;
+            this.price = price;
         }
-
-        double highest() {
-            double result = marks.get(0);
-            for (double mark : marks) if (mark > result) result = mark;
-            return result;
-        }
-
-        double lowest() {
-            double result = marks.get(0);
-            for (double mark : marks) if (mark < result) result = mark;
-            return result;
-        }
-
-        String grade() {
-            double avg = average();
-            if (avg >= 90) return "A+";
-            if (avg >= 80) return "A";
-            if (avg >= 70) return "B";
-            if (avg >= 60) return "C";
-            if (avg >= 50) return "D";
-            return "F";
+        public String toString() {
+            return action + " " + quantity + " " + symbol + " @ Rs. "
+                    + String.format("%.2f", price) + " | Total: Rs. "
+                    + String.format("%.2f", price * quantity);
         }
     }
 
     static final Scanner sc = new Scanner(System.in);
-    static final ArrayList<Student> students = new ArrayList<>();
+    static final Map<String, Stock> market = new LinkedHashMap<>();
+    static final Map<String, Integer> portfolio = new LinkedHashMap<>();
+    static final ArrayList<Transaction> history = new ArrayList<>();
+    static double cash = 100000.00;
 
     public static void main(String[] args) {
+        market.put("TCS", new Stock("TCS", "Tata Consultancy Services", 3850));
+        market.put("INFY", new Stock("INFY", "Infosys", 1750));
+        market.put("RELIANCE", new Stock("RELIANCE", "Reliance Industries", 2920));
+        market.put("HDFCBANK", new Stock("HDFCBANK", "HDFC Bank", 1680));
+
         while (true) {
-            System.out.println("\\n=== STUDENT GRADE TRACKER ===");
-            System.out.println("1. Add student");
-            System.out.println("2. View all student reports");
-            System.out.println("3. Search student by roll number");
-            System.out.println("4. Exit");
-            System.out.print("Choose an option: ");
+            System.out.println("\\n=== STOCK TRADING SIMULATOR (NOT REAL TRADING) ===");
+            System.out.println("Available cash: Rs. " + money(cash));
+            System.out.println("1. View market");
+            System.out.println("2. Buy shares");
+            System.out.println("3. Sell shares");
+            System.out.println("4. View portfolio");
+            System.out.println("5. View transaction history");
+            System.out.println("6. Simulate market price update");
+            System.out.println("7. Exit");
+            System.out.print("Choose: ");
             int choice = readInt();
 
             switch (choice) {
-                case 1 -> addStudent();
-                case 2 -> showAll();
-                case 3 -> searchStudent();
-                case 4 -> {
-                    System.out.println("Thank you for using Student Grade Tracker.");
-                    return;
-                }
-                default -> System.out.println("Invalid option. Choose 1-4.");
+                case 1 -> showMarket();
+                case 2 -> trade(true);
+                case 3 -> trade(false);
+                case 4 -> showPortfolio();
+                case 5 -> showHistory();
+                case 6 -> updatePrices();
+                case 7 -> { System.out.println("Goodbye."); return; }
+                default -> System.out.println("Invalid choice.");
             }
         }
     }
 
-    static void addStudent() {
-        System.out.print("Student name: ");
-        String name = sc.nextLine().trim();
-        System.out.print("Roll number: ");
-        String roll = sc.nextLine().trim();
+    static void showMarket() {
+        System.out.println("\\n--- MARKET ---");
+        for (Stock s : market.values())
+            System.out.println(s.getSymbol() + " | " + s.getCompany() + " | Rs. " + money(s.getPrice()));
+    }
 
-        if (name.isEmpty() || roll.isEmpty()) {
-            System.out.println("Name and roll number cannot be empty.");
+    static void trade(boolean buy) {
+        showMarket();
+        System.out.print((buy ? "Buy" : "Sell") + " which symbol? ");
+        String symbol = sc.nextLine().trim().toUpperCase();
+        Stock stock = market.get(symbol);
+        if (stock == null) {
+            System.out.println("Unknown stock symbol.");
             return;
         }
-        for (Student s : students) {
-            if (s.getRollNumber().equalsIgnoreCase(roll)) {
-                System.out.println("A student with this roll number already exists.");
-                return;
-            }
-        }
-
-        int count;
-        do {
-            System.out.print("Number of subjects (1-10): ");
-            count = readInt();
-        } while (count < 1 || count > 10);
-
-        ArrayList<Double> marks = new ArrayList<>();
-        for (int i = 1; i <= count; i++) {
-            double mark;
-            do {
-                System.out.print("Marks for subject " + i + " (0-100): ");
-                mark = readDouble();
-                if (mark < 0 || mark > 100) System.out.println("Enter marks between 0 and 100.");
-            } while (mark < 0 || mark > 100);
-            marks.add(mark);
-        }
-
-        students.add(new Student(name, roll, marks));
-        System.out.println("Student added successfully.");
-    }
-
-    static void showAll() {
-        if (students.isEmpty()) {
-            System.out.println("No student records yet.");
+        System.out.print("Quantity: ");
+        int quantity = readInt();
+        if (quantity <= 0) {
+            System.out.println("Quantity must be positive.");
             return;
         }
-        System.out.println("\\n--- STUDENT SUMMARY REPORT ---");
-        for (Student s : students) printReport(s);
-    }
 
-    static void searchStudent() {
-        System.out.print("Enter roll number: ");
-        String roll = sc.nextLine().trim();
-        for (Student s : students) {
-            if (s.getRollNumber().equalsIgnoreCase(roll)) {
-                printReport(s);
+        double total = stock.getPrice() * quantity;
+        int owned = portfolio.getOrDefault(symbol, 0);
+        if (buy) {
+            if (total > cash) {
+                System.out.println("Insufficient cash. Required: Rs. " + money(total));
                 return;
             }
+            cash -= total;
+            portfolio.put(symbol, owned + quantity);
+            history.add(new Transaction("BUY", symbol, quantity, stock.getPrice()));
+            System.out.println("Purchase completed. Remaining cash: Rs. " + money(cash));
+        } else {
+            if (quantity > owned) {
+                System.out.println("You own only " + owned + " shares of " + symbol + ".");
+                return;
+            }
+            cash += total;
+            int remaining = owned - quantity;
+            if (remaining == 0) portfolio.remove(symbol);
+            else portfolio.put(symbol, remaining);
+            history.add(new Transaction("SELL", symbol, quantity, stock.getPrice()));
+            System.out.println("Sale completed. Cash: Rs. " + money(cash));
         }
-        System.out.println("Student not found.");
     }
 
-    static void printReport(Student s) {
-        System.out.println("\\nName: " + s.getName());
-        System.out.println("Roll number: " + s.getRollNumber());
-        System.out.println("Marks: " + s.getMarks());
-        System.out.printf("Average: %.2f%n", s.average());
-        System.out.printf("Highest: %.2f | Lowest: %.2f%n", s.highest(), s.lowest());
-        System.out.println("Grade: " + s.grade());
+    static void showPortfolio() {
+        System.out.println("\\n--- PORTFOLIO ---");
+        if (portfolio.isEmpty()) {
+            System.out.println("No shares owned yet.");
+        } else {
+            double value = 0;
+            for (Map.Entry<String, Integer> item : portfolio.entrySet()) {
+                Stock s = market.get(item.getKey());
+                double holding = s.getPrice() * item.getValue();
+                value += holding;
+                System.out.println(item.getKey() + ": " + item.getValue()
+                        + " shares | Current value: Rs. " + money(holding));
+            }
+            System.out.println("Total stock value: Rs. " + money(value));
+        }
+        System.out.println("Cash balance: Rs. " + money(cash));
+        System.out.println("Portfolio value (cash + shares): Rs. "
+                + money(cash + currentStockValue()));
     }
+
+    static double currentStockValue() {
+        double total = 0;
+        for (Map.Entry<String, Integer> item : portfolio.entrySet())
+            total += market.get(item.getKey()).getPrice() * item.getValue();
+        return total;
+    }
+
+    static void showHistory() {
+        System.out.println("\\n--- TRANSACTION HISTORY ---");
+        if (history.isEmpty()) System.out.println("No transactions yet.");
+        else for (Transaction t : history) System.out.println(t);
+    }
+
+    static void updatePrices() {
+        System.out.println("Enter new simulated prices (Rs.); this is not live market data.");
+        for (Stock s : market.values()) {
+            System.out.print(s.getSymbol() + " current Rs. " + money(s.getPrice()) + ", new price: ");
+            double p = readDouble();
+            if (p > 0) s.setPrice(p);
+            else System.out.println("Invalid price; keeping previous price.");
+        }
+        System.out.println("Simulated prices updated.");
+    }
+
+    static String money(double amount) { return String.format("%.2f", amount); }
 
     static int readInt() {
         while (!sc.hasNextInt()) {
-            System.out.print("Please enter a whole number: ");
+            System.out.print("Enter a whole number: ");
             sc.next();
         }
-        int value = sc.nextInt();
-        sc.nextLine();
-        return value;
+        int v = sc.nextInt(); sc.nextLine(); return v;
     }
 
     static double readDouble() {
         while (!sc.hasNextDouble()) {
-            System.out.print("Please enter a valid number: ");
+            System.out.print("Enter a valid number: ");
             sc.next();
         }
-        double value = sc.nextDouble();
-        sc.nextLine();
-        return value;
+        double v = sc.nextDouble(); sc.nextLine(); return v;
     }
 }

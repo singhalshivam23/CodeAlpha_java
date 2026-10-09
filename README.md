@@ -1,15 +1,14 @@
-# Student Grade Tracker — CodeAlpha Java Internship
+# Stock Trading Platform — CodeAlpha Java Internship
 
 ## Features
-- Add student records with roll number and subject marks
-- Prevent duplicate roll numbers
-- Calculate average, highest and lowest marks
-- Assign a grade based on the average
-- View all reports or search by roll number
-- Uses Java classes, encapsulation, `ArrayList`, loops and input validation
+- Simulated market with sample stock symbols and prices
+- Buy and sell operations with cash and quantity validation
+- Portfolio valuation and transaction history
+- Manual simulated price updates
+- Uses classes, encapsulation, `Map`, `ArrayList` and basic OOP
 
 ## Requirements
-Java JDK 14 or newer (switch-arrow syntax is used).
+Java JDK 14 or newer.
 
 ## Run
 ```bash
@@ -18,10 +17,10 @@ java Main
 ```
 
 ## Test ideas
-1. Add a student with marks 80, 90 and 70 (average should be 80).
-2. Search using the student's roll number.
-3. Try a duplicate roll number.
-4. Try marks outside 0–100.
+1. Buy 2 TCS shares and inspect the portfolio.
+2. Try buying more shares than your cash permits.
+3. Try selling more shares than you own.
+4. Update a simulated price and check portfolio valuation.
 
-## Note
-This is a console-based learning project. Records are stored in memory and reset when the program exits.
+## Disclaimer
+This is an educational simulator. It does not connect to a stock exchange and does not use live prices or execute real trades. Data resets when the program exits.
